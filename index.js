@@ -1,10 +1,18 @@
 const { log } = require("console");
 const http = require("http");
-const { json } = require("node:stream/consumers");
 
 http
   .createServer((request, response) => {
     const { headers, method, url } = request;
+
+    // Let's create a echo server.
+    // It pipes the request back to response.
+    if (request.method === 'POST' && request.url === '/echo') {
+        request.pipe(response);
+      } else {
+        response.statusCode = 404;
+        response.end();
+      }
 
     let body = [];
     request
@@ -46,3 +54,17 @@ http
   .listen(5000, ()=>{
     log("Server running on port 5000")
   });
+
+
+/*   
+We've now covered most of the basics of handling HTTP requests. At this point, you should be able to:
+
+Instantiate an HTTP server with a request handler function, and have it listen on a port.
+Get headers, URL, method and body data from request objects.
+Make routing decisions based on URL and/or other data in request objects.
+Send headers, HTTP status codes and body data via response objects.
+Pipe data from request objects and to response objects.
+Handle stream errors in both the request and response streams.
+From these basics, Node.js HTTP servers for many typical use cases can be constructed. There are plenty of other things these APIs provide, so be sure to read through the API docs for EventEmitters, Streams, and HTTP.
+
+*/
