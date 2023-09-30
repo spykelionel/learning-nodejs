@@ -1,5 +1,6 @@
 const { log } = require("console");
 const http = require("http");
+const { json } = require("node:stream/consumers");
 
 http
   .createServer((request, response) => {
@@ -31,12 +32,10 @@ http
     //   "Content-Type": "application/json",
     //   "X-Powered-By": "bacon",
     // });
-
-    response.write("<html>");
-    response.write("<body>");
-    response.write("<h1>Hello, World!</h1>");
-    response.write("</body>");
-    response.write("</html>");
+    
+    const responseBody = { headers, method, url, body };
+ 
+    response.write(JSON.stringify(responseBody));
     response.end();
 
     // // OR 
@@ -44,4 +43,6 @@ http
     // response.end('<html><body><h1>Hello, World!</h1></body></html>');
 
   })
-  .listen(8080);
+  .listen(5000, ()=>{
+    log("Server running on port 5000")
+  });
