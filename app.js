@@ -1,15 +1,7 @@
-const fs = require('fs')
+const path = require('path')
 
+const _path = "C:\\Users\\Null\\Desktop\\MERN\\Nodejs\\app.js"
 
-fs.stat("file.txt", (err, stat)=>{
-    if(err){
-        // console.log(err)
-        throw new Error(err)
-    }
-
-
-    // stat
-    console.log("Size:", stat.size, "B")
-    console.log("Is a fIle:", stat.isFile())
-    console.log("Is a dir:", stat.isDirectory())
-})
+console.log("Parent: ", path.dirname(_path))
+console.log("Base: " , path.basename(_path))
+console.log("File extension:", path.extname(_path))
