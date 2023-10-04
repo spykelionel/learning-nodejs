@@ -1,7 +1,6 @@
-const path = require('path')
+const [arg1, arg2, arg3, arg4, ...args] = process.argv;
 
-const _path = "C:\\Users\\Null\\Desktop\\MERN\\Nodejs\\app.js"
-
-console.log("Parent: ", path.dirname(_path))
-console.log("Base: " , path.basename(_path))
-console.log("File extension:", path.extname(_path))
+console.log(arg1);
+console.log(arg2);
+console.log(arg3);
+console.log(arg4);
