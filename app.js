@@ -3,236 +3,117 @@ const express = require('express');
 const dotenv = require('dotenv');
 
 dotenv.config();
-
 const app = express();
 
 const todoRouter = express.Router()
 
-const allTodos = async (req, res) => {
-    await Todo.find({})
-    .then(todos => {
-        return res.status(200).json({
-            todos
-        })
+/*
+    Todo endpoints:
+    /todos - Get all todos :DONE
+    /todos/:id - Get a single todo :DONE
+    /todos/create - Create a todo :DONE
+    /todos/update/:id - Update a single todo :DONE
+    /todos/delete/:id - Delete a single todo?
+Todo.findOneAndDelete({_id: id})
+    .then(deleted=>{
+        Todo.find({})
+            .then(todos=>res.status(200).json(todos))
+            .catch(error=>res.status(500).json(error))
     })
-    .catch(error=>console.log(error))
-}
-
-const createTodo = async (req, res) => {
-    // Check if todotext exist, then send a 409 - for a dublicate,
-    // Todo.findOne({text: req.body.text}) || If todo, return 409, else 
-    // return 409.
-    const newTodo = new Todo({text: req.body.text})
-    await newTodo.save()
-        .then(todo => {
-            // if(todo) {
-            //     /// return 409
-            // } else {
-            //     // create a todo
-            // }
-            return res.status(201).json({
-                todo
-            })
-        })
-        .catch(error=>console.log(error))
-}
-
-todoRouter.get('/', allTodos)
-.post("/create", createTodo)
-// .delete("/delete/:todoId", deleteTodo)
-
-// Add delete todo Todo to the router chain above.
-
-// http://localhost:8000/todos/create
-
-
-app.use(express.json())
-app.use(express.urlencoded({ extended: true, }))
-app.use("/todos", todoRouter)
-
-
-let users = [
-    {
-        id: 0,
-        name: "A",
-        gender: "x"
-    },
-    {
-        id: 1,
-        name: "B",
-        gender: "x"
-    },
-    {
-        id: 2,
-        name: "C",
-        gender: "x"
-    }
-]
-
+*/
 
 const todoSchema = new mongoose.Schema({
-    text: {
-        type: String,
-        required: true
-    },
+    text: String,
     isComplete: {
-        type: String,
-        required: false,
-        default: false
-    },
-    description: {
-        type: String,
-        required: true,
-        default: "A todo"
+        type: Boolean,
+        default: false,
     }
 }, { timestamps: true })
 
-const Todo = mongoose.model("Todo", todoSchema)
+const Todo = mongoose.model("todo", todoSchema)
 
 
-mongoose.connect(process.env.MONGODBURL, { dbName: "first-app" })
-.then(success => {
-    console.log("Mongodb is now running")
-})
-.catch(error => {
-    console.log("Error connecting to DB: ", error)
-})
+const getAllTodos = (req, res) => {
+    Todo.find({})
+        .then((todos) => {
+            return res.json({ todos })
+        })
+        .catch(error => {
+            return res.json({ error })
+        })
+}
 
+const getSingleTodo = (req, res) => {
+    const { id } = req.params
+    Todo.findOne({ _id: id })
+        .then((todo) => {
+            return res.json({ todo })
+        })
+        .catch(error => {
+            return res.json({ error })
+        })
+}
 
-// app.get("/todos", allTodos)
+const createSingleTodo = (req, res) => {
+    const { text } = req.body
+    // const todo = new Todo({text: text})
+    const todo = new Todo({ text })
+    todo.save()
+        .then(savedTodo => {
+            return res.json({ todo: savedTodo })
+        })
+        .catch(error => {
+            return res.json({ error })
+        })
+}
 
-// app.post("/todos/create", createTodo)
-
-app.delete("/todos/delete/:todoId", async (req, res) => {
-    const {todoId} = req.params
-    await Todo.findOneAndDelete({_id: todoId})
-        .then(todo => {
-            return res.status(201).json({
-                todo
+const updateSingleTodo = (req, res) => {
+    const { id } = req.params
+    const updateTodoBody = req.body
+    const existingTodo = Todo.findById({ _id: id })
+    if (existingTodo) {
+        Todo.updateOne({ _id: id }, updateTodoBody, { new: true })
+            .then((updatedTodo) => {
+                Todo.find({})
+                    .then((todos) => {
+                        return res.json({ todos })
+                    })
+                    .catch(error => {
+                        return res.json({ error })
+                    })
             })
-        })
-        .catch(error=>console.log(error))
-})
+            .catch(error => {
+                return res.json({ error })
+            })
 
-// -> Ge a single todo....
-
-app.get("/", (req, res) => {
-    res.json({
-        message: "API is running now",
-        by: "Lionel"
-    })
-})
-
-app.post("/", (req, res) => {
-    const body = req.body
-
-    res.json({
-        message: "API is running now",
-        body
-    })
-    console.log("Posting here")
-})
-
-
-app.get("/users", (req, res) => {
-    return res.json({
-        message: "All users",
-        users
-    })
-})
-
-app.get("/users/:username", (req, res) => {
-    const { username } = req.params
-
-    const user = users.find(u => u.name === username)
-
-    if (user) {
-        return res.status(200).json({
-            message: `Found User with ${username}`,
-            statusCode: 200
+    } else {
+        return res.status(404).json({
+            message: "The updated todo not found"
         })
     }
-
-    return res.status(404).json({
-        message: `No user with ${username}`,
-        statusCode: 404
-    })
-
-})
-
-app.put("/users/:username", (req, res) => {
-    const { username } = req.params
-    const { name } = req.body
-
-    const user = users.find(u => u.name === username)
-
-    if (user) {
-
-        // modify
-        let currentUser = user
-        users = users.filter(u => u.name != username)
-
-        currentUser.name = name
-        users = [...users, currentUser]
-        return res.status(201).json({
-            message: `Found User with ${username}`,
-            statusCode: 200,
-            users
-        })
-    }
-
-    return res.status(404).json({
-        message: `No user with ${username}`,
-        statusCode: 404
-    })
-
-})
-
-app.post("/users/create", (req, res) => {
-    const { name, gender } = req.body
-
-    const user = users.find(u => u.name === name)
-    if (user) {
-        return res.status(409).json({
-            messag: "Duplicate",
-            statusCode: 409
-        })
-    }
-
-    const newUser = { id: Date.now().toString(), name, gender }
-
-    users = [...users, newUser]
-    // users.push(newUser)
-
-    res.status(201).json({
-        message: "User has been created",
-        statusCode: 201,
-        newUser
-    })
-
-})
-
-app.listen(8000, '127.0.0.1', (err) => {
-    if (err) {
-        console.log("Error at", err)
-        throw new Error(err);
-    }
-    console.log("App is running")
-})
-
-
-
-/*
-
-
-todo = {
-    id: ...,
-    text: ....,
-    isComplete: ...,
-    description: ....,
-    date_created: ...,
-    date_updated: ...,
 }
 
 
-*/
+todoRouter
+    .get("/", getAllTodos)
+    .get("/:id", getSingleTodo)
+    .post("/create", createSingleTodo)
+    .put("/update/:id", updateSingleTodo)
+    .delete("/delete/:id", deleteSingleTodo)
+
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use("/todos", todoRouter)
+const { PORT, MONGODBURL } = process.env;
+
+mongoose.connect(MONGODBURL, { dbName: "todo" })
+    .then((onSuccess) => {
+        console.log("MongoDB is running")
+    })
+    .catch(error => {
+        console.log("Error connecting to MongoDB", error)
+    })
+
+app.listen(PORT, () => {
+    console.log("App is running on:", PORT)
+})
