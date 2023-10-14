@@ -1,40 +1,4 @@
-const mongoose = require('mongoose');
-const express = require('express');
-const dotenv = require('dotenv');
-
-dotenv.config();
-const app = express();
-
-
-app.use(require('cors')())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-
-/*
-    Todo endpoints:
-    /todos - Get all todos :DONE
-    /todos/:id - Get a single todo :DONE
-    /todos/create - Create a todo :DONE
-    /todos/update/:id - Update a single todo :DONE
-    /todos/delete/:id - Delete a single todo?
-Todo.findOneAndDelete({_id: id})
-    .then(deleted=>{
-        Todo.find({})
-            .then(todos=>res.status(200).json(todos))
-            .catch(error=>res.status(500).json(error))
-    })
-*/
-
-const todoSchema = new mongoose.Schema({
-    text: String,
-    isComplete: {
-        type: Boolean,
-        default: false,
-    }
-}, { timestamps: true })
-
-const Todo = mongoose.model("todo", todoSchema)
-
+const Todo = require('../model/Todo')
 
 const getAllTodos = (req, res) => {
     Todo.find({})
@@ -61,7 +25,8 @@ const createSingleTodo = (req, res) => {
     console.log(req.body)
     const { text } = req.body
     // const todo = new Todo({text: text})
-    const todo = new Todo({ text })
+    console.log(req.user)
+    const todo = new Todo({ text, user: req.user._doc._id })
     todo.save()
         .then(savedTodo => {
             return res.json({ todo: savedTodo })
@@ -124,24 +89,10 @@ const deleteSingleTodo = (req, res) => {
         })
 }
 
-
-app.get("/todos", getAllTodos)
-app.get("/todos/:id", getSingleTodo)
-app.post("/todos/create", createSingleTodo)
-app.put("/todos/update/:id", updateSingleTodo)
-app.delete("/todos/delete/:id", deleteSingleTodo)
-
-
-const { PORT, MONGODBURL } = process.env;
-
-mongoose.connect(MONGODBURL, { dbName: "todo" })
-    .then((onSuccess) => {
-        console.log("MongoDB is running")
-    })
-    .catch(error => {
-        console.log("Error connecting to MongoDB", error)
-    })
-
-app.listen(PORT, () => {
-    console.log("App is running on:", PORT)
-})
+module.exports = {
+    createSingleTodo,
+    deleteSingleTodo,
+    getAllTodos,
+    getSingleTodo,
+    updateSingleTodo
+}
